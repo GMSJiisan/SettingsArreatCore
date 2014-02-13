@@ -643,6 +643,7 @@ Func RecupDonneesSettings()
 	$LifeLave = GUICtrlRead($InputLifeLave)
 	$LifeArm = GUICtrlRead($InputLifeArm)
 	$LifeSpore = GUICtrlRead($InputLifeSpore)
+	$LifeMine = GUICtrlRead($InputLifeMine)
 	If IsChecked($CheckboxResActivated) Then
 		$ResActivated = "true"
 	Else
@@ -662,3 +663,25 @@ Func RecupDonneesSettings()
 	$MinHCLife = GUICtrlRead($InputViemini)
 	AjoutLog("On récupère les données pour le settings.ini et le settingsHero.ini")
 EndFunc;==>RecupDonneesSettings
+
+
+Func RempliOptions()
+
+	If $D3PrefsBot = "true" Then
+		GUICtrlSetState($CpuGpuItem ,$GUI_CHECKED)
+	Else
+		GUICtrlSetState($CpuGpuItem ,$GUI_UNCHECKED)
+	EndIf
+	AjoutLog("Remplissage des options : " & $OptionsIni)
+EndFunc;==>RempliOtions
+
+
+Func RecupOtions()
+
+	If IsChecked($CpuGpuItem) Then
+		$D3PrefsBot = "true"
+	Else
+		$D3PrefsBot = "false"
+	EndIf
+	AjoutLog("On récupère les options : " & $OptionsIni)
+EndFunc;==>RecupOtions

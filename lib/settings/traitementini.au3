@@ -1,5 +1,6 @@
 ;lecture du fichier settings.ini
 Func LoadConfigs($FichierINI)
+
 	$PassD3 = IniRead($FichierINI, "Account info", "pass", "")
 	$PartieSolo = IniRead($FichierINI, "Run info", "PartieSolo", "")
 	$TakeABreak = IniRead($FichierINI, "Run info", "TakeABreak", "")
@@ -39,8 +40,11 @@ Func LoadConfigs($FichierINI)
 	$HeroAxeZ = IniRead($FichierINI, "Run info", "Hero_Axe_Z", "")
 	$SequenceFile = IniRead($FichierINI, "Run info", "SequenceFile", "")
 	$QualiteItem = IniRead($FichierINI, "Run info", "QualiteItem", "")
+
 	AjoutLog("Chargement du fichier : " & $FichierINI)
-EndFunc
+
+EndFunc;==>LoadConfigs
+
 ;ecriture du fichier settings.ini
 Func SaveConfigs($FichierINI)
 
@@ -83,11 +87,14 @@ Func SaveConfigs($FichierINI)
 	IniWrite($FichierINI, "Run info", "Hero_Axe_Z", $HeroAxeZ)
 	IniWrite($FichierINI, "Run info", "SequenceFile", $SequenceFile)
 	IniWrite($FichierINI, "Run info", "QualiteItem", $QualiteItem)
+
 	AjoutLog("Enregistrement des modifs du fichier : " & $FichierINI)
-EndFunc
+
+EndFunc;==>SaveConfigs
+
 ;ecriture du fichier settingsHeroX.ini
 Func SaveConfigsHero($FichierINI)
-	MsgBox( 0, "", $FichierINI, 3)
+
 	IniWrite($FichierINI, "Run info", "Potions", $Potions)
 	IniWrite($FichierINI, "Run info", "Key1", $key1)
 	IniWrite($FichierINI, "Run info", "Key2", $key2)
@@ -176,10 +183,14 @@ Func SaveConfigsHero($FichierINI)
 	iniwrite($FichierINI, "Run info","UsePath",$UsePath)
 	iniwrite($FichierINI, "Run info","HCSecurity",$HCSecurity)
 	iniwrite($FichierINI, "Run info","MinHCLife",$MinHCLife)
+
 	AjoutLog("Enregistrement des modifs du fichier : " & $FichierINI)
-EndFunc
+
+EndFunc;==>SaveConfigsHero
+
 ;lecture du fichier settingsHeroX.ini
 Func LoadConfigsHero($FichierINI)
+
 	$Potions = IniRead($FichierINI, "Run info", "Potions", "")
 	$key1 = IniRead($FichierINI, "Run info", "key1", "")
 	$key2 = IniRead($FichierINI, "Run info", "key2", "")
@@ -268,5 +279,37 @@ Func LoadConfigsHero($FichierINI)
 	$ResLife = IniRead($FichierINI, "Run info", "ResLife", "")
 	$HCSecurity = IniRead($FichierINI, "Run info", "HCSecurity", "")
 	$MinHCLife = IniRead($FichierINI, "Run info", "MinHCLife", "")
+
 	AjoutLog("Chargement du fichier : " & $FichierINI)
-EndFunc
+
+EndFunc;==>LoadConfigsHero
+
+;;Lecture des options de Settings Arreat Core
+Func LectureOptions()
+
+	$Devmode = IniRead($SettingsIni, "Run info", "Devmode", "")
+	If $Devmode = "true" Then
+		GUICtrlSetState($DevmodeItem, $GUI_CHECKED)
+	Else
+		GUICtrlSetState($DevmodeItem, $GUI_UNCHECKED)
+	EndIf
+
+	If FileExists($D3PrefsNormal) Then
+		GUICtrlSetState($CpuGpuItem, $GUI_ENABLE)
+		$D3PrefsBot = IniRead($OptionsIni, "Optimisations", "D3PrefsBot", "")
+	Else
+		GUICtrlSetState($CpuGpuItem, $GUI_DISABLE)
+	EndIf
+
+	AjoutLog("Chargement du fichier : " & $OptionsIni)
+
+EndFunc;==>LectureOptions
+
+;;Enregistrement des options de settings Arreat Core
+Func EnregOptions()
+
+	iniwrite($OptionsIni, "Optimisations","D3PrefsBot",$D3PrefsBot)
+
+	AjoutLog("Enregistrement des modifs du fichier : " & $OptionsIni)
+
+EndFunc;==>EnregOptions

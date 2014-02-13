@@ -2,34 +2,40 @@
 
 #NoTrayIcon
 
-Global $MainForm = GUICreate("Settings Core Arreat",617,287,-1,-1,-1,-1)
-GUISetIcon(@scriptdir & "\lib\ico\icon.ico", -1)
+Global $MainForm = GUICreate("Settings Arreat Core",617,306,-1,-1,-1,-1)
+GUISetIcon(@ScriptDir & "\lib\ico\icon.ico")
+;;Menu
+$OptionsMenu = GUICtrlCreateMenu("Options")
+$LogsMenu = GUICtrlCreateMenuItem("Afficher les logs", $OptionsMenu)
+$StatsMenu = GUICtrlCreateMenuItem("Afficher les stats", $OptionsMenu)
+$GrablistsMenu = GUICtrlCreateMenuItem("Afficher les grablists", $OptionsMenu)
+$BuildsMenu = GUICtrlCreateMenuItem("Afficher les builds", $OptionsMenu)
+GUICtrlCreateMenuitem("", $OptionsMenu)
+$EnreD3PrefsMenu = GUICtrlCreateMenuItem("Enregistrer le D3Prefs.txt", $OptionsMenu)
+$CpuGpuItem = GUICtrlCreateMenuItem("Cpu/gpu pour Bot", $OptionsMenu)
+GUICtrlCreateMenuitem("", $OptionsMenu)
+$DevmodeItem = GUICtrlCreateMenuItem("Devmode", $OptionsMenu)
+$HelpMenu = GUICtrlCreateMenu("?")
+$InfoItem = GUICtrlCreateMenuItem("Aide", $HelpMenu)
+$AproposItem = GUICtrlCreateMenuItem("A propos", $HelpMenu)
+;;Fin Menu
 GUICtrlCreateGroup("Profils",5,5,441,272,-1,-1)
 GUICtrlSetBkColor(-1,"0xF0F0F0")
 Global $AddProfil = GUICtrlCreateButton("Ajouter Profil",10,250,100,22,-1,-1)
 Global $EditProfil = GUICtrlCreateButton("Editer Profil",110,250,100,22,-1,-1)
 Global $DeleteProfil = GUICtrlCreateButton("Effacer Profil",210,250,100,22,-1,-1)
 Global $ChargerProfil = GUICtrlCreateButton("Charger Profil",340,250,100,22,-1,-1)
-Global $ButtonStats = GUICtrlCreateButton("Stats",465,200,137,22,-1,-1)
-GUICtrlSetTip(-1,"Permet l'affichage des fichiers du dossier 'stats'")
 Global $ListviewProfils = GUICtrlCreatelistview("",10,20,430,225,-1,512)
-Global $ButtonGrablists = GUICtrlCreateButton("Grablists",465,175,137,22,-1,-1)
-GUICtrlSetTip(-1,"Gestion des grablists")
-Global $ButtonLogs = GUICtrlCreateButton("Logs",465,225,137,22,-1,-1)
-GUICtrlSetTip(-1,"Affichage des logs liés au soft")
-Global $ImageLogo = GUICtrlCreatePic(@scriptdir & "\lib\images\logo.jpg",455,10,156,156,-1,-1)
-GUICtrlCreateGroup("",455,166,156,111,-1,-1)
-GUICtrlSetBkColor(-1,"0xF0F0F0")
-Global $ButtonBuilds = GUICtrlCreateButton("Builds",465,250,137,22,-1,-1)
-GUICtrlSetTip(-1,"Permet d'importer des builds et de les coller à vos profils")
+Global $ImageLogo = GUICtrlCreatePic(@ScriptDir & "\lib\images\logo.jpg",455,10,156,156,-1,-1)
 
 _GUICtrlListView_InsertColumn($ListviewProfils, 0, "Profil", 100)
 _GUICtrlListView_InsertColumn($ListviewProfils, 1, "Nom du perso", 100)
 _GUICtrlListView_InsertColumn($ListviewProfils, 2, "Build", 226)
 
+
 Func Builds()
 
-	Global $Builds = GUICreate("Builds",377,302,-1,-1,-1,-1)
+	Global $Builds = GUICreate("Builds",377,302,-1,-1,-1,$WS_EX_TOPMOST)
 	GUISetIcon(@scriptdir & "\lib\ico\icon.ico", -1)
 	Global $ListBuilds = GUICtrlCreatelist("",15,25,144,227,-1,512)
 	Global $ListsBuildsProfils = GUICtrlCreatelist("",215,25,144,227,-1,512)
@@ -46,6 +52,7 @@ Func Builds()
 	Global $ButtonBuildsFermer = GUICtrlCreateButton("Fermer",200,270,80,25,-1,-1)
 	GUISetState(@SW_SHOW,$Builds)
 
+	AjoutLog("Ouverture de la fenêtre Builds")
 	ListFichier($DossierBuilds,2) ; on list les builds
 	ListFichier($DossierProfils,3) ; On list les profils
 
@@ -55,29 +62,87 @@ Func Builds()
 
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($Builds)
+				AjoutLog("Fermeture de la fenêtre Builds")
 				ExitLoop
 
 			Case $ButtonBuildsFermer
 				GUIDelete($Builds)
+				AjoutLog("Fermeture de la fenêtre Builds")
 				ExitLoop
 
 			Case $ButtonBuildsCharger
+				$BuildSel = $DossierBuilds & GUICtrlRead($ListBuilds)
+				$ProfilBuildSel = $DossierProfilsSettings & "settingshero_" & GUICtrlRead($ListsBuildsProfils)
+				FileCopy($BuildSel, $ProfilBuildSel, 9)
+				AjoutLog("Chargement du build : " & $BuildSel & "dans le profil : " & $ProfilBuildSel)
 
 			Case $ButtonBuildsSupprimer
 				$SuppBuild = GUICtrlRead($ListBuilds)
 				If $SuppBuild = "" Then
-					MsgBox( 48 + 262144, "", "Aucun build sélectionné", 3)
+					MsgBox( 48 + 262144, "", "Aucun build sélectionné !!", 3)
 				Else
 					FileDelete($DossierBuilds & $SuppBuild)
+					AjoutLog("Suppression du build : " & $SuppBuild)
 					ListFichier($DossierBuilds,2)
 				EndIf
 
 			Case $ButtonBuildsImporter
-
-
+				Local Const $sMessage = "Sélectionner le build à importer."
+				Local $sFile = FileOpenDialog($sMessage, @WindowsDir & "\", "Settings (*.ini;)")
+				If @error Then
+					MsgBox( 48 + 262144, "", "Aucun fichier sélectionné !!", 3)
+				Else
+					$fName = StringRegExpReplace($sFile, "^.*\\", "")
+					FileCopy($sFile, $DossierBuilds & $fName)
+					AjoutLog("Importation Build : " & $fName)
+					ListFichier($DossierBuilds,2)
+				EndIf
 		EndSwitch
 	WEnd
 EndFunc;==>Builds
+
+Func CreerBuild()
+
+	Global $CreerBuild = GUICreate("Nom du build",260,80,-1,-1,-1,$WS_EX_TOPMOST)
+	GUICtrlCreateLabel("Nom du build :",15,15,74,15,-1,-1)
+	GUICtrlSetBkColor(-1,"-2")
+	Global $InputCreerBuild = GUICtrlCreateInput("",95,10,150,20,-1,512)
+	Global $ButtonCreerBuild = GUICtrlCreateButton("Créer",145,40,100,30,-1,-1)
+	Global $ButtonAnnulerCreerBuild = GUICtrlCreateButton("Annuler",15,40,100,30,-1,-1)
+	GUISetState(@SW_SHOW,$CreerBuild)
+
+	AjoutLog("Ouverture de la fenêtre 'Créer un build'")
+
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($CreerBuild)
+				AjoutLog("Fermeture de la fenêtre 'Créer un build'")
+				ExitLoop
+
+			Case $ButtonCreerBuild
+				$NomBuild = GUICtrlRead($InputCreerBuild) & ".ini"
+				If FileExists($DossierBuilds & $NomBuild) Then
+					MsgBox( 48 + 262144, "", "Build déjà éxistant", 3)
+					ContinueLoop
+				Else
+					FileCopy($FichierSettingsHeroDefaut, $DossierBuilds & $NomBuild)
+					AjoutLog("Création d'un nouveau build :" & $NomBuild)
+				EndIf
+				GUIDelete($CreerBuild)
+				AjoutLog("Fermeture de la fenêtre 'Créer un build'")
+				ExitLoop
+
+			Case $ButtonAnnulerCreerBuild
+				GUIDelete($CreerBuild)
+				AjoutLog("Annulation de la création d'un build")
+				ExitLoop
+
+		EndSwitch
+	WEnd
+
+EndFunc;==>CreerBuild
 
 Func Logs()
 
@@ -89,6 +154,7 @@ Func Logs()
 	Global $ButtonFermerLogs = GUICtrlCreateButton("Fermer",325,505,100,25,-1,-1)
 	GUISetState(@SW_SHOW,$MainLogs)
 
+	AjoutLog("Ouverture de la fenêtre Logs")
 	GUICtrlSetData($EditLogs,$Logs)
 
 	While 1
@@ -96,15 +162,21 @@ Func Logs()
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($MainLogs)
+				AjoutLog("Fermeture de la fenêtre Logs")
 				ExitLoop
+
 			Case $ButtonFermerLogs
 				GUIDelete($MainLogs)
+				AjoutLog("Fermeture de la fenêtre Logs")
 				ExitLoop
+
 			Case $ButtonEffacerLogs
 				GUICtrlSetData($EditLogs,"")
+
 			Case $ButtonExporterLogs
 				CreerFichierLogs ()
 				GUICtrlSetData($EditLogs,$Logs)
+
 		EndSwitch
 	WEnd
 
@@ -120,19 +192,22 @@ Func Grablists()
 	GUICtrlSetFont(-1,8,400,4,"MS Sans Serif")
 	GUICtrlSetBkColor(-1,"-2")
 	Global $ButtonEnregistrerModif = GUICtrlCreateButton("Enregistrer les modifications",501,10,155,25,-1,-1)
-	Global $ButtonFermerGrablist = GUICtrlCreateButton("Fermer",425,10,83,25,-1,-1)
+	Global $ButtonFermerGrablist = GUICtrlCreateButton("Fermer",415,10,83,25,-1,-1)
 	GUISetState(@SW_SHOW,$Grablist)
 
+	AjoutLog("Ouverture de la fenêtre Grablist")
 
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($Grablist)
+				AjoutLog("Fermeture de la fenêtre Grablist")
 				ExitLoop
 
 			Case $ButtonFermerGrablist
 				GUIDelete($Grablist)
+				AjoutLog("Fermeture de la fenêtre Grablist")
 				ExitLoop
 
 			Case $ButtonEnregistrerModif
@@ -164,6 +239,7 @@ Func Stats()
 	Global $ButtonFermerStats = GUICtrlCreateButton("Fermer",15,345,200,25,-1,-1)
 	GUISetState(@SW_SHOW,$Stats)
 
+	AjoutLog("Ouverture de la fenêtre Stats")
 	if FileExists($DossierStats) = 0 Then DirCreate($DossierStats)
 
 	ListFichier($DossierStats,1)
@@ -173,10 +249,12 @@ Func Stats()
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($Stats)
+				AjoutLog("Fermeture de la fenêtre Stats")
 				ExitLoop
 
 			Case $ButtonFermerStats
 				GUIDelete($Stats)
+				AjoutLog("Fermeture de la fenêtre Stats")
 				ExitLoop
 
 			Case $ButtonEffacerStats
@@ -210,7 +288,7 @@ EndFunc;==>Stats
 
 Func EditSettings($ProfilSel)
 
-	Global $Main = GUICreate("Settings Arreat Core", 666, 426, -1, -1, -1, $WS_EX_TOPMOST)
+	Global $Main = GUICreate("Edition de profils", 666, 426, -1, -1, -1, $WS_EX_TOPMOST)
 	GUISetIcon(@scriptdir & "\lib\ico\icon.ico", -1)
 	Global $Tab1 = GUICtrlCreateTab(8, 8, 649, 377)
 
@@ -287,74 +365,11 @@ Func EditSettings($ProfilSel)
 
 	;;Onglet settingsHero.ini
 	Global $TabHeroIni = GUICtrlCreateTabItem("Héros")
-	Global $Label3 = GUICtrlCreateLabel("Potions :", 168, 64, 45, 17)
-	Global $ComboPotions = GUICtrlCreateCombo("", 240, 56, 137, 25, BitOR($CBS_DROPDOWN,$CBS_AUTOHSCROLL))
-	GUICtrlSetData(-1, "healthPotion_Minor|healthPotion_Lesser|healthPotion_Normal|healthPotion_Greater|HealthPotionLarge|healthPotion_Super|healthPotion_Heroic|healthPotion_Resplendent|healthPotion_Runic|healthPotion_Mythic")
-	Global $Label4 = GUICtrlCreateLabel("Stock de Potions :", 16, 64, 90, 17)
-	Global $InputPotionStock = GUICtrlCreateInput("", 107, 56, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeForPotion = GUICtrlCreateInput("", 106, 120, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label27 = GUICtrlCreateLabel("Vie pour Potion :", 16, 128, 86, 17)
-	Global $CheckboxTakeShrines = GUICtrlCreateCheckbox("Prendre les Sanctuaires", 168, 352, 137, 17)
-	Global $Inputrepairafterxxgames = GUICtrlCreateInput("", 344, 216, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label28 = GUICtrlCreateLabel("Réparer après X Parties :", 168, 224, 121, 17)
-	Global $Label29 = GUICtrlCreateLabel("Temps Max/Partie :", 168, 128, 98, 17)
-	Global $Inputmaxgamelength = GUICtrlCreateInput("", 312, 120, 65, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	GUICtrlSetTip(-1,"Durée d'une partie (en ms) ==> 1800000 = 30 minutes / 1350000 = 22,5 minutes")
-	Global $InputattackRange = GUICtrlCreateInput("", 344, 152, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputgrabRange = GUICtrlCreateInput("", 344, 184, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label30 = GUICtrlCreateLabel("Distance d'Attaque :", 168, 160, 100, 17)
-	Global $Label31 = GUICtrlCreateLabel("Distance de Collecte :", 168, 192, 120, 17)
-	Global $CheckboxMonsterTri = GUICtrlCreateCheckbox("Tri des Monstres", 16, 256, 97, 17);352 ancienne valeur x
-	GUICtrlSetTip(-1,"Le bot attaquera les monstres proches en premier")
-	Global $CheckboxMonsterRefresh = GUICtrlCreateCheckbox("Vérif. si Monstre", 16, 288, 121, 17);320 idem
-	GUICtrlSetTip(-1,"Le bot vérifie s'il y a encore des monstres autour")
-	Global $CheckboxItemRefresh = GUICtrlCreateCheckbox("Vérif. si Objet", 16, 320, 97, 17);224 idem
-	GUICtrlSetTip(-1,"Le bot vérifie s'il y a des objets au sol")
-	Global $CheckboxMonsterPriority = GUICtrlCreateCheckbox("Priorité aux Monstres", 16, 352, 116, 17);256 idem
-	GUICtrlSetTip(-1,"Le bot tuera d'abord tous les monstres autour de lui, puis ramassera les objets au sol")
-	Global $CheckboxInventoryCheck = GUICtrlCreateCheckbox("Vérif. Inventaire", 16, 224, 113, 17);288 idem
-	GUICtrlSetTip(-1,"Vérifie l'inventaire au début du run")
-	Global $Inputattacktimeout = GUICtrlCreateInput("", 106, 152, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	GUICtrlSetTip(-1,"Temps avant de passer à une autre cible (en ms)")
-	Global $Inputgrabtimeout = GUICtrlCreateInput("", 106, 184, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	GUICtrlSetTip(-1,"Temps avant de passer à un autre objet (en ms)")
-	Global $CheckboxGestionaffixe = GUICtrlCreateCheckbox("Gestion des Affixes", 168, 256, 153, 17)
-	Global $CheckboxGestionaffixeloot = GUICtrlCreateCheckbox("Gestion des Affixes de Loot", 168, 288, 169, 17)
-	Global $InputBanAffixList = GUICtrlCreateInput("", 240, 88, 137, 21)
-	Global $Label32 = GUICtrlCreateLabel("Tempo. Attaque :", 16, 160, 82, 17)
-	Global $Label33 = GUICtrlCreateLabel("Tempo. Collecte :", 16, 192, 120, 17)
-	Global $Label34 = GUICtrlCreateLabel("Bannir Affixe :", 168, 96, 69, 17)
-	Global $CheckboxGestaffixeByClass = GUICtrlCreateCheckbox("Gestion des Affixes par Classe", 168, 320, 193, 17)
 	Global $CheckboxUsePath = GUICtrlCreateCheckbox("UsePath", 536, 216, 97, 17)
-	Global $InputLifeArcane = GUICtrlCreateInput("", 484, 55, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label36 = GUICtrlCreateLabel("Arcane	(% vie) :", 400, 64, 78, 17)
-	Global $InputLifeProj = GUICtrlCreateInput("", 484, 85, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifePeste = GUICtrlCreateInput("", 484, 115, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label37 = GUICtrlCreateLabel("Proj	(% vie) :", 400, 94, 78, 17)
-	Global $Label38 = GUICtrlCreateLabel("Peste	(% vie) :", 400, 123, 78, 17)
-	Global $InputLifeProfa = GUICtrlCreateInput("", 484, 144, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeIce = GUICtrlCreateInput("", 484, 173, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifePoison = GUICtrlCreateInput("", 484, 203, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeLave = GUICtrlCreateInput("", 484, 262, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeArm = GUICtrlCreateInput("", 484, 320, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeExplo = GUICtrlCreateInput("", 484, 233, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeMine = GUICtrlCreateInput("", 484, 291, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $InputLifeSpore = GUICtrlCreateInput("", 484, 349, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	Global $Label39 = GUICtrlCreateLabel("Profa	(% vie) :", 400, 152, 78, 17)
-	Global $Label40 = GUICtrlCreateLabel("Glace	(% vie) :", 400, 181, 78, 17)
-	Global $Label41 = GUICtrlCreateLabel("Poison	(% vie) :", 400, 210, 78, 17)
-	Global $Label42 = GUICtrlCreateLabel("Explo	(% vie) :", 400, 240, 78, 17)
-	Global $Label43 = GUICtrlCreateLabel("Lave	(% vie) :", 400, 270, 78, 17)
-	Global $Label44 = GUICtrlCreateLabel("Mine	(% vie) :", 400, 298, 78, 17)
-	Global $Label45 = GUICtrlCreateLabel("Arm	(% vie) :", 400, 327, 78, 17)
-	Global $Label46 = GUICtrlCreateLabel("Spore	(% vie) :", 400, 356, 78, 17)
-	Global $Label1 = GUICtrlCreateLabel("Potion à Acheter :", 16, 96, 90, 17)
-	Global $InputNbPotionBuy = GUICtrlCreateInput("", 107, 88, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
-	GUICtrlSetTip(-1,"Spécifie le nombre de potions à acheter au début du run (0 = Désactivé)")
 	Global $Group1 = GUICtrlCreateGroup("Pause HC", 528, 128, 121, 81)
 	Global $CheckboxSecuHC = GUICtrlCreateCheckbox("Activée", 536, 152, 97, 17)
 	GUICtrlSetTip(-1,"Active de la sécurité pour le mode Hard Core")
-	Global $Label26 = GUICtrlCreateLabel("Vie Mini :", 536, 184, 46, 17)
+	Global $Label26 = GUICtrlCreateLabel("Vie Mini :", 536, 184, 47, 17)
 	Global $InputViemini = GUICtrlCreateInput("", 608, 176, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
 	GUICtrlSetTip(-1,"Spécifie la vie minimum pour activer la sécurité HC")
 	GUICtrlCreateGroup("", -99, -99, 1, 1)
@@ -362,6 +377,81 @@ Func EditSettings($ProfilSel)
 	Global $CheckboxResActivated = GUICtrlCreateCheckbox("Activée", 536, 64, 97, 17)
 	Global $Label35 = GUICtrlCreateLabel("Nombre :", 536, 96, 47, 17)
 	Global $InputResLife = GUICtrlCreateInput("", 608, 88, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group3 = GUICtrlCreateGroup("Affixes :", 184, 120, 193, 129)
+	Global $CheckboxGestionaffixe = GUICtrlCreateCheckbox("Gestion des Affixes", 193, 145, 153, 17)
+	Global $CheckboxGestionaffixeloot = GUICtrlCreateCheckbox("Gestion des Affixe de Loot", 193, 169, 169, 17)
+	Global $CheckboxGestaffixeByClass = GUICtrlCreateCheckbox("Gestion des Affixes par Classe", 193, 194, 193, 17)
+	Global $Label34 = GUICtrlCreateLabel("Bannir Affixe :", 193, 223, 69, 17)
+	Global $InputBanAffixList = GUICtrlCreateInput("", 263, 216, 105, 21)
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group4 = GUICtrlCreateGroup("Potions :", 16, 40, 361, 81)
+	Global $Label3 = GUICtrlCreateLabel("Type :", 23, 63, 34, 17)
+	Global $ComboPotions = GUICtrlCreateCombo("", 75, 59, 137, 25, BitOR($CBS_DROPDOWN,$CBS_AUTOHSCROLL))
+	GUICtrlSetData(-1, "healthPotion_Minor|healthPotion_Lesser|healthPotion_Normal|healthPotion_Greater|HealthPotionLarge|healthPotion_Super|healthPotion_Heroic|healthPotion_Resplendent|healthPotion_Runic|healthPotion_Mythic")
+	Global $Label4 = GUICtrlCreateLabel("Stock de Potions :", 225, 63, 91, 17)
+	Global $InputPotionStock = GUICtrlCreateInput("", 327, 59, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label1 = GUICtrlCreateLabel("Potion achetée :", 23, 93, 82, 17)
+	Global $InputNbPotionBuy = GUICtrlCreateInput("", 171, 88, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlSetTip(-1,"Spécifie le nombre de potions à acheter au début du run (0 = Désactivé)")
+	Global $Label27 = GUICtrlCreateLabel("Vie pour Potions :", 226, 94, 87, 17)
+	Global $InputLifeForPotion = GUICtrlCreateInput("", 327, 88, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group6 = GUICtrlCreateGroup("", 16, 120, 161, 137)
+	Global $Label32 = GUICtrlCreateLabel("Tempo. Attaque :", 23, 145, 86, 17)
+	Global $Inputattacktimeout = GUICtrlCreateInput("", 127, 137, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlSetTip(-1,"Temps avant de passer à une autre cible (en ms)")
+	Global $Label33 = GUICtrlCreateLabel("Tempo. Collecte :", 23, 173, 87, 17)
+	Global $Inputgrabtimeout = GUICtrlCreateInput("", 127, 167, 41, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlSetTip(-1,"Temps avant de passer à un autre objet (en ms)")
+	Global $Label30 = GUICtrlCreateLabel("Distance d'Attaque :", 24, 205, 100, 17)
+	Global $InputattackRange = GUICtrlCreateInput("", 135, 197, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $InputgrabRange = GUICtrlCreateInput("", 135, 227, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label31 = GUICtrlCreateLabel("Distance de Collecte :", 23, 234, 108, 17)
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group7 = GUICtrlCreateGroup("", 184, 248, 193, 129)
+	Global $CheckboxItemRefresh = GUICtrlCreateCheckbox("Vérif.si Objet", 191, 260, 81, 17)
+	GUICtrlSetTip(-1,"Le bot vérifie s'il y a des objets au sol")
+	Global $CheckboxMonsterRefresh = GUICtrlCreateCheckbox("Vérif. si Monstre", 191, 350, 97, 17)
+	GUICtrlSetTip(-1,"Le bot vérifie s'il y a encore des monstres autour")
+	Global $CheckboxInventoryCheck = GUICtrlCreateCheckbox("Vérif. Inventaire", 191, 284, 113, 17)
+	GUICtrlSetTip(-1,"Vérifie l'inventaire au début du run")
+	Global $CheckboxMonsterPriority = GUICtrlCreateCheckbox("Priorité aux Monstres", 191, 306, 121, 17)
+	GUICtrlSetTip(-1,"Le bot tuera d'abord tous les monstres autour de lui, puis ramassera les objets au sol")
+	Global $CheckboxMonsterTri = GUICtrlCreateCheckbox("Tri des Monstres", 191, 328, 97, 17)
+	GUICtrlSetTip(-1,"Le bot attaquera les monstres proches en premier")
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group8 = GUICtrlCreateGroup("", 16, 256, 161, 121)
+	Global $Label29 = GUICtrlCreateLabel("Temps Max/Parties :", 23, 270, 102, 17)
+	Global $Inputmaxgamelength = GUICtrlCreateInput("", 23, 292, 105, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	GUICtrlSetTip(-1,"Durée d'une partie (en ms) ==> 1800000 = 30 minutes / 1350000 = 22,5 minutes")
+	Global $Label28 = GUICtrlCreateLabel("Rép. après X Parties :", 23, 325, 107, 17)
+	Global $Inputrepairafterxxgames = GUICtrlCreateInput("", 137, 318, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $CheckboxTakeShrines = GUICtrlCreateCheckbox("Prendre les Sanctuaires", 23, 351, 137, 17)
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	Global $Group9 = GUICtrlCreateGroup("Affixes", 384, 40, 137, 337)
+	Global $InputLifeArcane = GUICtrlCreateInput("", 480, 54, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label36 = GUICtrlCreateLabel("Arcane  (% vie) :", 391, 62, 81, 17)
+	Global $Label37 = GUICtrlCreateLabel("Proj        (%vie) :", 391, 90, 80, 17)
+	Global $InputLifeProj = GUICtrlCreateInput("", 480, 83, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label38 = GUICtrlCreateLabel("Peste    (% vie) :", 391, 119, 80, 17)
+	Global $InputLifePeste = GUICtrlCreateInput("", 480, 112, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label43 = GUICtrlCreateLabel("Lave     (% vie) :", 391, 149, 80, 17)
+	Global $InputLifeLave = GUICtrlCreateInput("", 480, 141, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label44 = GUICtrlCreateLabel("Mine      (% vie) :", 391, 179, 82, 17)
+	Global $InputLifeMine = GUICtrlCreateInput("", 480, 171, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label45 = GUICtrlCreateLabel("Arm       (% vie) :", 391, 209, 80, 17)
+	Global $InputLifeArm = GUICtrlCreateInput("", 480, 201, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label46 = GUICtrlCreateLabel("Spore    (% vie) :", 391, 237, 81, 17)
+	Global $InputLifeSpore = GUICtrlCreateInput("", 480, 231, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $InputLifeProfa = GUICtrlCreateInput("", 480, 261, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $InputLifeIce = GUICtrlCreateInput("", 480, 291, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $InputLifePoison = GUICtrlCreateInput("", 480, 321, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $InputLifeExplo = GUICtrlCreateInput("", 480, 351, 33, 21, BitOR($GUI_SS_DEFAULT_INPUT,$ES_CENTER))
+	Global $Label39 = GUICtrlCreateLabel("Profa    (% vie) :", 391, 267, 78, 17)
+	Global $Label40 = GUICtrlCreateLabel("Glace   (% vie) :", 391, 297, 78, 17)
+	Global $Label41 = GUICtrlCreateLabel("Poison  (% vie) :", 391, 327, 79, 17)
+	Global $Label42 = GUICtrlCreateLabel("Explo    (% vie) :", 391, 357, 79, 17)
 	GUICtrlCreateGroup("", -99, -99, 1, 1)
 
 	;;Onglet Séquences
@@ -505,26 +595,33 @@ Func EditSettings($ProfilSel)
 	Global $ButtonEnregistrer = GUICtrlCreateButton("Enregistrer les modifications", 496, 392, 163, 25)
 	Global $ButtonAnnuler = GUICtrlCreateButton("Annuler", 416, 392, 75, 25)
 	Global $ButtonParDefaut = GUICtrlCreateButton("Par défaut", 320, 392, 91, 25)
+	Global $ButtonCreerBuild = GUICtrlCreateButton("Créer un build", 8, 392, 99, 25)
 	GUISetState(@SW_SHOW)
 
+	AjoutLog("Ouverture de la fenêtre 'Edition de profil'")
 
 	RemplirSettings()
 	EtatGriser()
 
-	$NPerso = IniRead($DossierProfils & $ProfilSel, "Info", "NomPerso", "inconnu")
+	$NPerso = IniRead($DossierProfils & $ProfilSel, "Info", "NomPerso", "")
 	GUICtrlSetData($LabelSettingsProfil,$ProfilSel & "  -- Pseudo : " & $NPerso)
 
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
+
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($Main)
+				AjoutLog("Fermeture de la fenêtre 'Edition de profil'")
 				ExitLoop
+
 			Case $ButtonAnnuler
 				GUIDelete($Main)
+				AjoutLog("Fermeture de la fenêtre 'Edition de profil'")
 				ExitLoop
 
 			Case $CheckboxPause
+
 				If GUICtrlRead($CheckboxPause) = $GUI_CHECKED Then
 					GUICtrlSetState($InputApresXparties, $GUI_ENABLE)
 					GUICtrlSetState($InputTempsPause, $GUI_ENABLE)
@@ -537,7 +634,9 @@ Func EditSettings($ProfilSel)
 					GUICtrlSetState($CheckboxPauseRepas, $GUI_UNCHECKED)
 					AjoutLog("On grise la pause")
 				EndIf
+
 			Case $CheckboxRecycler
+
 				If GUICtrlRead($CheckboxRecycler) = $GUI_CHECKED Then
 					GUICtrlSetState($InputQualit, $GUI_ENABLE)
 					AjoutLog("On dégrise le recyclage")
@@ -545,7 +644,9 @@ Func EditSettings($ProfilSel)
 					GUICtrlSetState($InputQualit, $GUI_DISABLE)
 					AjoutLog("On grise le recyclage")
 				EndIf
+
 			Case $ComboChoixRun
+
 				If GUICtrlRead($ComboChoixRun) = "Acte Aléatoire (Act1,Act2,Act3)" Then
 					GUICtrlSetState($CheckboxSequencesAlea, $GUI_ENABLE)
 					GUICtrlSetState($InputChangementAct, $GUI_ENABLE)
@@ -572,50 +673,73 @@ Func EditSettings($ProfilSel)
 				EndIf
 
 			Case $ButtonParDefaut
+
 				ValeurDefaut()
 				RemplirSettings()
 				MsgBox( 0, "", "Valeurs par défaut chargées !", 3)
 
 			Case $ButtonEnregistrer
+
 				RecupDonneesSettings()
 				EnregistProfil($ProfilSel)
 				GUIDelete($Main)
+				AjoutLog("Fermeture de la fenêtre 'Edition de profil'")
 				MsgBox( 0, "", "Profil modifié !", 3)
 				ExitLoop
 
+			Case $ButtonCreerBuild
+
+				CreerBuild()
+
 			Case $ButtonResetAct1
+
 				$SequenceFileAct1 = "act1-manoir_[1-8]|act1-Val_[1-8]|act1-putride_[1-6]|act1-champs_[1-8]"
 				GUICtrlSetData($InputSequenceAct1,$SequenceFileAct1)
+				AjoutLog("Séquence Act1 par défaut")
 
 			Case $ButtonResetAct2
+
 				$SequenceFileAct2 = "act2-alcarnus_[1-8]|act2-gorge_noire_[1-6]|act2-dalgur_[1-2]"
 				GUICtrlSetData($InputSequenceAct2,$SequenceFileAct2)
+				AjoutLog("Séquence Act2 par défaut")
 
 			Case $ButtonResetAct3
+
 				$SequenceFileAct3 = "[CMD]safeportstart()|act3_core_start_[1-5]|act3_tower_[1-5]|act3_field_[1-2]|[CMD]TakeWP=0,0,3,4"
 				GUICtrlSetData($InputSequenceAct3,$SequenceFileAct3)
+				AjoutLog("Séquence Act3 par défaut")
 
 			Case $ButtonResetAct3PT
+
 				$SequenceFileAct3PtSauve = "act3_pt_save_le_coeur_darreat_[1-5]|act3_tower_[1-5]|act3_field_[1-2]|[CMD]TakeWP=0,0,3,4"
 				GUICtrlSetData($InputSequenceAct3Pt,$SequenceFileAct3PtSauve)
+				AjoutLog("Séquence Act3PT par défaut")
 
 			Case $ButtonResetAct333
+
 				$SequenceFileAct333 = "act3_rempart_[1-2]|act3_tuer_Ghom"
 				GUICtrlSetData($InputSequenceAct333,$SequenceFileAct333)
+				AjoutLog("Séquence Act333 par défaut")
 
 			Case $ButtonResetAct362
+
 				$SequenceFileAct362 = "act3_rempart_[1-2]|act3_field_[1-2]|act3-Tuer_Siegebreaker"
 				GUICtrlSetData($InputSequenceAct362,$SequenceFileAct362)
+				AjoutLog("Séquence Act362 par défaut")
 
 			Case $ButtonResetAct373
+
 				$SequenceFileAct373 = "act3_tower_[1-5]|act3_field_[1-2]|act3-Tuer_Azmodan"
 				GUICtrlSetData($InputSequenceAct373,$SequenceFileAct373)
+				AjoutLog("Séquence Act373 par défaut")
 
 		EndSwitch
 	WEnd
+
 EndFunc;==>EditSettings
 
 Func CreerProfil()
+
 	Global $CreationProfil = GUICreate("Créer un profil",262,117,-1,-1,-1,$WS_EX_TOPMOST,$MainForm)
 	GUISetIcon(@scriptdir & "\lib\ico\icon.ico", -1)
 	Global $CreerProfil = GUICtrlCreateButton("Créer",170,85,82,25,-1,-1)
@@ -631,21 +755,31 @@ Func CreerProfil()
 	GUICtrlSetBkColor(-1,"-2")
 	GUISetState(@SW_SHOW,$CreationProfil)
 
+	AjoutLog("Ouverture de la fenêtre 'Créer un profil'")
+
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
+
 			Case $GUI_EVENT_CLOSE
+
 				GUIDelete($CreationProfil)
+				AjoutLog("Fermeture de la fenêtre 'Créer un profil'")
 				ExitLoop
+
 			Case $AnnulerProfil
+
 				GUIDelete($CreationProfil)
+				AjoutLog("Fermeture de la fenêtre 'Créer un profil'")
 				ExitLoop
+
 			Case $CreerProfil
-				;If Not(GUICtrlRead($InputProfil) = "") Then
-					CreationProfil($DossierProfils)
-					GUIDelete($CreationProfil)
-					ExitLoop
-				;EndIf
+
+				CreationProfil($DossierProfils)
+				GUIDelete($CreationProfil)
+				AjoutLog("Fermeture de la fenêtre 'Créer un profil'")
+				ExitLoop
+
 		EndSwitch
 	WEnd
 EndFunc;==>CreerProfil
